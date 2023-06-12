@@ -10,8 +10,8 @@ class TokenRepository  {
 
   TokenRepository._internal(this.spData);
 
-  Future<String> getToken() => spData.getToken();
+  Future<String?> getToken() => spData.getToken();
 
-  Future<bool> saveToken(String token) => spData.setToken(token);
+  Future<bool> saveToken(String? token) => spData.setToken(token);
 
 }

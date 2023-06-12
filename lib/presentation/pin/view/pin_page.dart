@@ -1,8 +1,10 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:outsource/navigation/route_name.dart';
-import 'package:outsource/presentation/pin/bloc/pin_view_model.dart';
+import 'package:outsource/presentation/pin/bloc/pin_bloc.dart';
 import 'package:outsource/resources/app_colors.dart';
 import 'package:outsource/resources/app_icons.dart';
+import 'package:outsource/translations/locale_keys.g.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:provider/provider.dart';
 
@@ -24,12 +26,28 @@ class _PinPageState extends State<PinPage> {
           children: <Widget>[
             SizedBox(height: maxHeight > 900 ? 92 : 60),
             const _ForgotPassword(),
-            SizedBox(height: maxHeight > 900 ? 32 : maxHeight < 800 ? 16 : 24),
+            SizedBox(
+                height: maxHeight > 900
+                    ? 32
+                    : maxHeight < 800
+                        ? 16
+                        : 24),
             const _EnterPinText(),
-            SizedBox(height: maxHeight > 900 ? 32 : maxHeight < 800 ? 16 : 24),
+            SizedBox(
+                height: maxHeight > 900
+                    ? 32
+                    : maxHeight < 800
+                        ? 16
+                        : 24),
             const _EnterPinRow(),
-            SizedBox(height: maxHeight > 900 ? 68 : maxHeight < 800 ? 32 : 52),
+            SizedBox(
+                height: maxHeight > 900
+                    ? 68
+                    : maxHeight < 800
+                        ? 32
+                        : 52),
             const _BuildPinRow(),
+            //_Listener(),
           ],
         ),
       ),
@@ -42,13 +60,13 @@ class _ForgotPassword extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Align(
+    return Align(
       alignment: Alignment.topRight,
       child: Padding(
-        padding: EdgeInsets.only(right: 16.0),
+        padding: const EdgeInsets.only(right: 16.0),
         child: Text(
-          'Забыли пароль?',
-          style: TextStyle(
+          LocaleKeys.forget_password.tr(),
+          style: const TextStyle(
             fontSize: 14,
             color: AppColors.slate500,
           ),
@@ -63,12 +81,13 @@ class _EnterPinText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bloc = context.watch<PinBloc>();
     final maxWidth = MediaQuery.of(context).size.width;
     return Center(
       child: Text(
-        'Установите новый PIN',
+        bloc.data.pinText,
         style: TextStyle(
-          fontSize: maxWidth > 450 ?  24 : 18,
+          fontSize: maxWidth > 450 ? 24 : 18,
           fontWeight: FontWeight.w700,
           color: AppColors.slate900,
         ),
@@ -87,10 +106,10 @@ class _EnterPinRow extends StatefulWidget {
 class _EnterPinRowState extends State<_EnterPinRow> {
   @override
   Widget build(BuildContext context) {
-    final model = context.watch<PinBloc>();
-    final pinController = model.data.pinController;
-    final pinLength = model.data.pinLength;
-    final isObscured = model.data.isObscured;
+    final bloc = context.watch<PinBloc>();
+    final pinController = bloc.data.pinController;
+    final pinLength = bloc.data.pinLength;
+    final isObscured = bloc.data.isObscured;
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxHeight = constraints.maxHeight;
@@ -105,15 +124,26 @@ class _EnterPinRowState extends State<_EnterPinRow> {
                 child: PinCodeTextField(
                   length: pinLength,
                   controller: pinController,
-                  onChanged: (value) {
-                    setState(() {
-                      pinController.text = value;
-                      if (pinController.text.length == pinLength) {
-                        Navigator.of(context)
-                            .pushReplacementNamed(RouteName.login.route);
-                      }
-                    });
+                  onCompleted: (value) async {
+                    //if (pinController.text.length == pinLength) {
+                    await bloc.enterPin(pinController.text).whenComplete(
+                      () {
+                        if (bloc.data.isPinSave == true) {
+                          Navigator.of(context).pushReplacementNamed(
+                            RouteName.home.route,
+                          );
+                        } else if (bloc.data.error.isNotEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            backgroundColor: AppColors.red500,
+                            duration: const Duration(seconds: 1),
+                            content: Text(bloc.data.error),
+                          ));
+                        }
+                      },
+                    );
+                    //}
                   },
+                  onChanged: (value) {},
                   textStyle: const TextStyle(
                     fontSize: 24,
                     color: AppColors.slate500,
@@ -143,7 +173,7 @@ class _EnterPinRowState extends State<_EnterPinRow> {
                   child: IconButton(
                     onPressed: () {
                       setState(() {
-                        model.data.isObscured = !isObscured;
+                        bloc.data.isObscured = !isObscured;
                       });
                     },
                     icon: Icon(
@@ -160,6 +190,27 @@ class _EnterPinRowState extends State<_EnterPinRow> {
     );
   }
 }
+
+// class _Listener extends StatelessWidget {
+//   const _Listener({Key? key}) : super(key: key);
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     final bloc = context.watch<PinBloc>();
+//
+//     return ListenableProvider(
+//       create: (BuildContext context) {
+//         if (bloc.data.isPinSave) {
+//           Navigator.of(context).pushReplacementNamed(
+//             RouteName.home.route,
+//           );
+//         }
+//         return bloc;
+//       },
+//       child: SizedBox(),
+//     );
+//   }
+// }
 
 class _BuildPinRow extends StatefulWidget {
   const _BuildPinRow({Key? key}) : super(key: key);
@@ -198,13 +249,12 @@ class _BuildPinRowState extends State<_BuildPinRow> {
               height: maxHeight > 900 ? 100 : 90,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
-
                 children: <Widget>[
-                  _BuildPinButton(number: '4'),
+                  const _BuildPinButton(number: '4'),
                   SizedBox(width: maxWidth > 400 ? 16 : 12),
-                  _BuildPinButton(number: '5'),
+                  const _BuildPinButton(number: '5'),
                   SizedBox(width: maxWidth > 400 ? 16 : 12),
-                  _BuildPinButton(number: '6'),
+                  const _BuildPinButton(number: '6'),
                 ],
               ),
             ),
@@ -228,11 +278,11 @@ class _BuildPinRowState extends State<_BuildPinRow> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  _BuildFingerPrintButton(),
+                  const _BuildFingerPrintButton(),
                   SizedBox(width: maxWidth > 400 ? 16 : 12),
-                  _BuildPinButton(number: '0'),
+                  const _BuildPinButton(number: '0'),
                   SizedBox(width: maxWidth > 400 ? 16 : 12),
-                  _BuildDeletePinButton(),
+                  const _BuildDeletePinButton(),
                 ],
               ),
             ),
@@ -309,16 +359,20 @@ class _BuildDeletePinButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bloc = context.read<PinBloc>();
     return LayoutBuilder(
       builder: (context, constraints) {
-        return SizedBox(
-          width: constraints.maxWidth > 400 ? 100 : 75,
-          height: constraints.maxHeight > 400 ? 100 : 75,
-          child: Center(
-            child: Image.asset(
-              AppIcons.deletePin,
-              width: 30,
-              height: 23,
+        return GestureDetector(
+          onTap: () => bloc.deleteOnePin(),
+          child: SizedBox(
+            width: constraints.maxWidth > 400 ? 100 : 75,
+            height: constraints.maxHeight > 400 ? 100 : 75,
+            child: Center(
+              child: Image.asset(
+                AppIcons.deletePin,
+                width: 30,
+                height: 23,
+              ),
             ),
           ),
         );

@@ -9,7 +9,6 @@ part of 'sent_sms_response_dto.dart';
 SentSmsResponseDto _$SentSmsResponseDtoFromJson(Map<String, dynamic> json) =>
     SentSmsResponseDto(
       success: json['success'] as bool,
-      message: json['message'] as String?,
       error: json['error'] == null
           ? null
           : Error.fromJson(json['error'] as Map<String, dynamic>),
@@ -21,7 +20,6 @@ SentSmsResponseDto _$SentSmsResponseDtoFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$SentSmsResponseDtoToJson(SentSmsResponseDto instance) =>
     <String, dynamic>{
       'success': instance.success,
-      'message': instance.message,
       'error': instance.error,
       'result': instance.result,
     };
@@ -35,9 +33,15 @@ Map<String, dynamic> _$ErrorToJson(Error instance) => <String, dynamic>{
     };
 
 Result _$ResultFromJson(Map<String, dynamic> json) => Result(
-      token: json['token'] as String,
+      token: json['token'] as String?,
+      message: json['message'] as String?,
+      phone: json['phone'] as String?,
+      isLogin: json['isLogin'] as bool?,
     );
 
 Map<String, dynamic> _$ResultToJson(Result instance) => <String, dynamic>{
       'token': instance.token,
+      'message': instance.message,
+      'phone': instance.phone,
+      'isLogin': instance.isLogin,
     };

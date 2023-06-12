@@ -6,13 +6,11 @@ part 'sent_sms_response_dto.g.dart';
 class SentSmsResponseDto {
   SentSmsResponseDto({
     required this.success,
-    required this.message,
     required this.error,
     required this.result,
   });
 
   bool success;
-  String? message;
   Error? error;
   Result? result;
 
@@ -40,9 +38,15 @@ class Error {
 class Result {
   Result({
     required this.token,
+    required this.message,
+    required this.phone,
+    required this.isLogin,
   });
 
-  String token;
+  String? token;
+  String? message;
+  String? phone;
+  bool? isLogin;
 
   factory Result.fromJson(Map<String, dynamic> json) =>
       _$ResultFromJson(json);

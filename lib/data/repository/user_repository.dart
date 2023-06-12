@@ -10,8 +10,8 @@ class UserRepository  {
 
   UserRepository._internal(this.spData);
 
-  Future<String> getUser() => spData.getUser();
+  Future<String?> getUser() => spData.getUser();
 
-  Future<bool> saveUser(String user) => spData.setUser(user);
+  Future<bool> saveUser(String? user) => spData.setUser(user);
 
 }

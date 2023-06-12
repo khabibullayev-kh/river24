@@ -8,9 +8,13 @@ class AppIcons {
   static const welcomeLogo = "assets/icons/welcome_icon.png";
   static const lock = "assets/icons/lock.png";
   static const done = "assets/icons/done.png";
-  static const exampleImage = "assets/icons/example_image.png";
+  static const exampleImage = "assets/icons/avatar.png";
   static const files = "assets/icons/files.svg";
   static const addFile = "assets/icons/box_add.svg";
   static const account = "assets/icons/account.svg";
   static const wallet = "assets/icons/wallet.svg";
+  static const globe = "assets/icons/globe.svg";
+  static const refresh = "assets/icons/refresh.svg";
+  static const closeRounded = "assets/icons/close_rounded.svg";
+  static const pencil = "assets/icons/pencil.svg";
 }

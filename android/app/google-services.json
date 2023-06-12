@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "164022280992",
+    "project_id": "river24-7240e",
+    "storage_bucket": "river24-7240e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:164022280992:android:7a92d1c37c5de52d06ad45",
+        "android_client_info": {
+          "package_name": "com.company.river"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "164022280992-dk6rjijakk1g2vtl5nfppae7ki7vivsj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCHJSv1AQBQ8YaEB6auJlpUfasiWVUH1hY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "164022280992-dk6rjijakk1g2vtl5nfppae7ki7vivsj.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "164022280992-7250ilqe8bv4njlp1cbog5d4i6p83rja.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.river24"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,10 +1,13 @@
 import 'package:dotted_border/dotted_border.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:outsource/navigation/route_name.dart';
 import 'package:outsource/presentation/register/bloc/register_bloc.dart';
+import 'package:outsource/presentation/widgets/agreement_policy.dart';
 import 'package:outsource/resources/app_colors.dart';
 import 'package:outsource/resources/app_icons.dart';
+import 'package:outsource/translations/locale_keys.g.dart';
 import 'package:provider/provider.dart';
 
 class LastStepPage extends StatefulWidget {
@@ -22,39 +25,31 @@ class _LastStepPageState extends State<LastStepPage> {
     return ChangeNotifierProvider.value(
       value: widget.bloc,
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         body: SafeArea(
           bottom: false,
-          child: SingleChildScrollView(
-            child: SizedBox(
-              height: MediaQuery.of(context).size.height - 30,
-              width: MediaQuery.of(context).size.width,
-              child: Stack(
-                children: [
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      const SizedBox(height: 24),
-                      const _LastStepText(),
-                      const SizedBox(height: 24),
-                      const _CircleAvatar(),
-                      const SizedBox(height: 24),
-                      const _FullNameField(),
-                      Divider(
-                        color: AppColors.slate300,
-                        height: 48,
-                      ),
-                      const _DoneButton(),
-                      const Expanded(child: SizedBox()),
-                      const Divider(thickness: 1, height: 1),
-                      const SizedBox(height: 24),
-                      const _AgreementPolicy(),
-                      const SizedBox(height: 24),
-                    ],
-                  ),
-                  _LoadingWidget(),
+          child: Stack(
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: const <Widget>[
+                  SizedBox(height: 24),
+                  _LastStepText(),
+                  SizedBox(height: 24),
+                  _CircleAvatar(),
+                  SizedBox(height: 24),
+                  _FullNameField(),
+                  Divider(color: AppColors.slate300, height: 48),
+                  _DoneButton(),
+                  Expanded(child: SizedBox()),
+                  Divider(thickness: 1, height: 1),
+                  SizedBox(height: 24),
+                  AgreementPolicy(),
+                  SizedBox(height: 24),
                 ],
               ),
-            ),
+              const _LoadingWidget(),
+            ],
           ),
         ),
       ),
@@ -67,13 +62,16 @@ class _LoadingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = context.select((RegisterBloc bloc) => bloc.data.isLoading);
-    return isLoading ? Container(
-      width: MediaQuery.of(context).size.width,
-      height: MediaQuery.of(context).size.height,
-      color: Colors.white.withOpacity(0.5),
-      child: Center(child: CircularProgressIndicator()),
-    ) : const SizedBox();
+    final isLoading =
+        context.select((RegisterBloc bloc) => bloc.data.isLoading);
+    return isLoading
+        ? Container(
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+            color: Colors.white.withOpacity(0.5),
+            child: const Center(child: CircularProgressIndicator()),
+          )
+        : const SizedBox();
   }
 }
 
@@ -82,9 +80,9 @@ class _LastStepText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Text(
-        'Последний этап',
+        LocaleKeys.last_step.tr(),
         style: TextStyle(
           fontWeight: FontWeight.w700,
           fontSize: 24,
@@ -177,7 +175,7 @@ class _CircleAvatarState extends State<_CircleAvatar> {
         children: [
           DottedBorder(
             dashPattern: [20, 7],
-            padding: EdgeInsets.all(4),
+            padding: const EdgeInsets.all(4),
             strokeWidth: 4,
             strokeCap: StrokeCap.square,
             color: AppColors.green500,
@@ -186,7 +184,7 @@ class _CircleAvatarState extends State<_CircleAvatar> {
               radius: 70,
               backgroundImage: bloc.data.croppedImage != null
                   ? MemoryImage(bloc.data.croppedImage!)
-                  : AssetImage(AppIcons.exampleImage) as ImageProvider,
+                  : const AssetImage(AppIcons.exampleImage) as ImageProvider,
             ),
           ),
           Positioned(
@@ -238,9 +236,13 @@ class _DoneButton extends StatelessWidget {
         child: ElevatedButton(
           onPressed: () async {
             await bloc.saveUserData();
-            if (bloc.data.isSuccess)
+            if (bloc.data.isSuccess) {
               Navigator.of(context).pushNamedAndRemoveUntil(
-                  RouteName.home.route, (Route<dynamic> route) => false);
+                RouteName.enterPin.route,
+                (Route<dynamic> route) => false,
+                //arguments: bloc,
+              );
+            }
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.green500,
@@ -259,7 +261,7 @@ class _DoneButton extends StatelessWidget {
                 Image.asset(AppIcons.done),
                 const SizedBox(width: 10),
                 Text(
-                  'Готово',
+                  LocaleKeys.ready.tr(),
                   style: TextStyle(
                     fontSize: isHeight ? 14 : 14,
                     fontWeight: FontWeight.w700,
@@ -271,58 +273,6 @@ class _DoneButton extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _AgreementPolicy extends StatelessWidget {
-  const _AgreementPolicy({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return RichText(
-      text: TextSpan(
-        text: "Продолжая, вы подтверждаете, что ознакомлены\n",
-        children: [
-          const TextSpan(
-            text: "c ",
-            style: TextStyle(
-              color: AppColors.slate900,
-            ),
-          ),
-          TextSpan(
-              text: "Политикой конфиденциальности",
-              style: const TextStyle(
-                color: AppColors.green500,
-              ),
-              recognizer: TapGestureRecognizer()
-                ..onTap = () => print("SIGNIN")),
-          const TextSpan(
-            text: " и\n",
-            style: TextStyle(
-              color: AppColors.slate900,
-            ),
-          ),
-          TextSpan(
-              text: "Пользовательским соглашением",
-              style: const TextStyle(
-                color: AppColors.green500,
-              ),
-              recognizer: TapGestureRecognizer()
-                ..onTap = () => print("SIGNIN")),
-          const TextSpan(
-            text: " и принимаете их",
-            style: TextStyle(
-              color: AppColors.slate900,
-            ),
-          ),
-        ],
-        style: const TextStyle(
-          color: AppColors.slate900,
-          fontSize: 14,
-        ),
-      ),
-      textAlign: TextAlign.center,
     );
   }
 }

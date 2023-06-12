@@ -1,11 +1,14 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:outsource/navigation/route_name.dart';
 import 'package:outsource/presentation/adverts/bloc/adverts_bloc.dart';
-import 'package:outsource/presentation/adverts/models/advert.dart';
-import 'package:outsource/presentation/widgets/advert_info.dart';
+import 'package:outsource/presentation/widgets/advert_widget.dart';
+import 'package:outsource/presentation/widgets/cupertino_segment_child.dart';
 import 'package:outsource/resources/app_colors.dart';
 import 'package:outsource/resources/app_icons.dart';
+import 'package:outsource/translations/locale_keys.g.dart';
 import 'package:provider/provider.dart';
 
 class OrdersPage extends StatefulWidget {
@@ -18,14 +21,11 @@ class OrdersPage extends StatefulWidget {
 class _OrdersPageState extends State<OrdersPage> {
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => AdvertsBloc(),
-      child: Scaffold(
-          appBar: AppBar(
-            title: const _AppBarWidget(),
-          ),
-          body: const _AdvertsBody()),
-    );
+    return Scaffold(
+        appBar: AppBar(
+          title: const _AppBarWidget(),
+        ),
+        body: const _AdvertsBody());
   }
 }
 
@@ -37,10 +37,10 @@ class _AdvertsBody extends StatefulWidget {
 }
 
 class _AdvertsBodyState extends State<_AdvertsBody> {
-  int? _sliding = 0;
-
   @override
   Widget build(BuildContext context) {
+    final bloc = context.watch<AdvertsBloc>();
+    final int? slidingIndex = bloc.data.slideIndex;
     return SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -50,47 +50,66 @@ class _AdvertsBodyState extends State<_AdvertsBody> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: CupertinoSlidingSegmentedControl(
-                groupValue: _sliding,
+                groupValue: slidingIndex,
                 backgroundColor: Colors.white,
                 onValueChanged: (int? value) {
                   setState(() {
-                    _sliding = value;
-                    print(_sliding);
+                    bloc.data.slideIndex = value;
+                    bloc.getData(value ?? 0);
                   });
                 },
                 children: {
-                  0: _CupertinoSlidingChild(
-                    text: 'Активные',
-                    color:
-                        _sliding == 0 ? AppColors.green600 : AppColors.grey500,
+                  0: CupertinoSlidingChild(
+                    text: LocaleKeys.active.tr(),
+                    color: slidingIndex == 0
+                        ? AppColors.green600
+                        : AppColors.grey500,
                   ),
-                  1: _CupertinoSlidingChild(
-                    text: 'Выполненные',
-                    color:
-                        _sliding == 1 ? AppColors.green600 : AppColors.grey500,
+                  1: CupertinoSlidingChild(
+                    text: LocaleKeys.completed.tr(),
+                    color: slidingIndex == 1
+                        ? AppColors.green600
+                        : AppColors.grey500,
                   ),
                 },
               ),
             ),
           ),
-          _AdvertsList(),
+          IndexedStack(
+              index: slidingIndex,
+              children: const [
+                _AdvertsList(),
+                _CompletedAdvertsList()
+              ],
+            ),
+          // if (slidingIndex == 0) _AdvertsList(),
+          // if (slidingIndex == 1) _CompletedAdvertsList(),
         ],
       ),
     );
   }
 }
 
-class _AdvertsList extends StatelessWidget {
-  const _AdvertsList({Key? key}) : super(key: key);
+class _CompletedAdvertsList extends StatelessWidget {
+  const _CompletedAdvertsList({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final data = context.watch<AdvertsBloc>().data;
+    final bloc = context.watch<AdvertsBloc>();
+    final data = bloc.data;
     final adverts = data.adverts;
     return ListView.separated(
       shrinkWrap: true,
       itemBuilder: (context, index) {
-        return AdvertInfo(advert: adverts[index]);
+        return GestureDetector(
+          onTap: () {
+            Navigator.of(context).pushNamed(
+              RouteName.advertInfo.route,
+              arguments: adverts[index].id,
+            );
+          },
+          child: AdvertInfo(advert: adverts[index]),
+        );
       },
       separatorBuilder: (context, index) {
         return const SizedBox(height: 12);
@@ -100,49 +119,34 @@ class _AdvertsList extends StatelessWidget {
   }
 }
 
-class _CupertinoSlidingChild extends StatelessWidget {
-  final String text;
-  final Color color;
-
-  const _CupertinoSlidingChild({
-    Key? key,
-    required this.text,
-    required this.color,
-  }) : super(key: key);
+class _AdvertsList extends StatelessWidget {
+  const _AdvertsList({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.maxFinite,
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Text(
-            text,
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-              fontSize: 14,
-              color: color,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 4.5, vertical: 2),
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.black,
-            ),
-            child: const Text(
-              '3',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-              ),
-            ),
-          ),
-        ],
-      ),
+    final bloc = context.watch<AdvertsBloc>();
+    final data = bloc.data;
+    final adverts = data.adverts;
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemBuilder: (context, index) {
+        return GestureDetector(
+          onTap: () {
+            Navigator.of(context, rootNavigator: false).pushNamed(
+              RouteName.advertInfo.route,
+              arguments: adverts[index].id,
+            ).then((value) {
+              bloc.loadActive();
+            });
+          },
+          child: AdvertInfo(advert: adverts[index]),
+        );
+      },
+      separatorBuilder: (context, index) {
+        return const SizedBox(height: 12);
+      },
+      itemCount: adverts.length,
     );
   }
 }
@@ -155,44 +159,44 @@ class _AppBarWidget extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
-        const Text(
-          'Мои заказы',
-          style: TextStyle(
+        Text(
+          LocaleKeys.my_adverts.tr(),
+          style: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.w600,
             color: Colors.black,
           ),
         ),
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 8,
-            vertical: 4,
-          ),
-          decoration: BoxDecoration(
-              border: Border.all(
-                width: 1,
-                color: AppColors.green200,
-              ),
-              borderRadius: BorderRadius.circular(50)),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              SvgPicture.asset(
-                AppIcons.wallet,
-                color: AppColors.green500,
-              ),
-              const SizedBox(width: 7),
-              const Text(
-                '0 UZS',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.slate900,
-                ),
-              )
-            ],
-          ),
-        )
+        // Container(
+        //   padding: const EdgeInsets.symmetric(
+        //     horizontal: 8,
+        //     vertical: 4,
+        //   ),
+        //   decoration: BoxDecoration(
+        //       border: Border.all(
+        //         width: 1,
+        //         color: AppColors.green200,
+        //       ),
+        //       borderRadius: BorderRadius.circular(50)),
+        //   child: Row(
+        //     mainAxisSize: MainAxisSize.min,
+        //     children: <Widget>[
+        //       SvgPicture.asset(
+        //         AppIcons.wallet,
+        //         color: AppColors.green500,
+        //       ),
+        //       const SizedBox(width: 7),
+        //       const Text(
+        //         '0 UZS',
+        //         style: TextStyle(
+        //           fontSize: 14,
+        //           fontWeight: FontWeight.w600,
+        //           color: AppColors.slate900,
+        //         ),
+        //       )
+        //     ],
+        //   ),
+        // )
       ],
     );
   }

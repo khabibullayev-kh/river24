@@ -46,18 +46,33 @@ dependencies:
 
   json_annotation: ^4.8.0
   freezed_annotation: ^2.2.0
+  easy_localization: ^3.0.1
 
   local_auth: ^2.1.6
   timelines: ^0.1.0
   cropperx: ^1.1.1
   image_picker: ^0.8.7+3
+  pinch_zoom: ^1.0.0
+  cached_network_image: ^3.2.3
   path_provider: ^2.0.14
-  timeline_tile: ^2.0.0
   pin_code_fields: ^7.4.0
   alt_sms_autofill: ^1.0.0
+  persistent_bottom_nav_bar: ^5.0.2
   flutter_multi_formatter: ^2.10.2
   dotted_border: ^2.0.0+3
   flutter_svg: ^2.0.4
+  url_launcher: ^6.1.10
+  flutter_rating_bar: ^4.0.1
+
+  uuid: ^3.0.7
+  firebase_core: ^2.10.0
+  flutter_polyline_points: ^1.0.0
+  search_map_location: ^0.0.6
+  google_maps_flutter: ^2.2.5
+  geolocator: ^9.0.2
+  geocoding: ^2.1.0
+
+
 
 dev_dependencies:
   flutter_test:
@@ -79,4 +94,5 @@ flutter:
 
   assets:
     - assets/icons/
+    - assets/translations/
     - .env

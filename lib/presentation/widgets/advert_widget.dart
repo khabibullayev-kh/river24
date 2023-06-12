@@ -1,6 +1,11 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:outsource/presentation/adverts/bloc/adverts_bloc.dart';
 import 'package:outsource/presentation/adverts/models/advert.dart';
+import 'package:outsource/presentation/widgets/rating_widget.dart';
 import 'package:outsource/resources/app_colors.dart';
+import 'package:outsource/translations/locale_keys.g.dart';
+import 'package:provider/provider.dart';
 
 class AdvertInfo extends StatelessWidget {
   final Advert advert;
@@ -23,6 +28,7 @@ class AdvertInfo extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -36,7 +42,7 @@ class AdvertInfo extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  advert.createdTime,
+                  '${advert.createdTime}',
                   style: const TextStyle(
                     fontSize: 10,
                     color: AppColors.slate500,
@@ -47,25 +53,7 @@ class AdvertInfo extends StatelessWidget {
             const SizedBox(height: 8),
             TimeLineVertical(advert: advert),
             const SizedBox(height: 12),
-            _MakeStatusRow(status: advert.status),
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            //   children: <Widget>[
-            //     // _FinishedStatus(
-            //     //   endedOrClickText:
-            //     //       order.isFinished != null ? 'Завершен' : '${order.clicks}',
-            //     // ),
-            //     // if (order.isFinished != null)
-            //     //   const Text(
-            //     //     'Нажмите чтобы оценить',
-            //     //     style: TextStyle(
-            //     //       fontSize: 14,
-            //     //       fontWeight: FontWeight.w700,
-            //     //       color: AppColors.amber500,
-            //     //     ),
-            //     //   )
-            //   ],
-            // ),
+            _MakeStatusRow(advert: advert),
           ],
         ),
       ),
@@ -74,45 +62,111 @@ class AdvertInfo extends StatelessWidget {
 }
 
 class _MakeStatusRow extends StatelessWidget {
-  final String status;
+  final Advert advert;
 
-  const _MakeStatusRow({Key? key, required this.status}) : super(key: key);
+  const _MakeStatusRow({Key? key, required this.advert}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    switch (status) {
-      case "PENDING":
-        return Row(
-          children: [
-            _WaitingStatus(),
-          ],
-        );
+    final requestCount = advert.requestsCount;
+    final driverId = advert.driverId;
+    final bloc = context.watch<AdvertsBloc>();
+    switch (advert.status) {
       case "ON_THE_WAY":
         return Row(
-          children: [
+          children: const [
             _OnTheWayStatus(),
           ],
         );
       case "CANCELED":
         return Row(
           children: [
-            _CanceledStatus(),
+            _CanceledStatus(LocaleKeys.canceled.tr()),
           ],
         );
       case "COMPLETED":
         return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _FinishedStatus(endedOrClickText: 'Завершен'),
+            _FinishedStatus(endedOrClickText: LocaleKeys.completed_status.tr()),
+            if (advert.canRate == true)
+              GestureDetector(
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return ChangeNotifierProvider.value(
+                        value: bloc,
+                        child: RatingWidget(advert: advert),
+                      );
+                    },
+                  );
+                },
+                child: Text(
+                  LocaleKeys.tap_to_rate.tr(),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.amber500,
+                  ),
+                ),
+              ),
+          ],
+        );
+      case "INACTIVE":
+        return Row(
+          children: [
+            _CanceledStatus(LocaleKeys.nonactive.tr()),
+          ],
+        );
+      case "ACTIVE":
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (driverId != null) ...[
+                _FinishedStatus(
+                    endedOrClickText: LocaleKeys.courier_chosen.tr()),
+                const SizedBox(width: 12),
+              ],
+              if (requestCount != 0 && driverId == null) ...[
+                _FinishedStatus(
+                  endedOrClickText:
+                      '$requestCount ${requestCount == 1 ? LocaleKeys.request.tr() : LocaleKeys.requests.tr()}',
+                ),
+                const SizedBox(width: 12),
+              ],
+              if (driverId != null) ...[
+                const _OnTheWayStatus(),
+                const SizedBox(width: 12),
+              ],
+              if (advert.offerAmount != null)
+                _PriceStatus(price: advert.offerAmount.toString()),
+            ],
+          ),
+        );
+      case "PROCESS":
+        return Row(
+          children: const [
+            _WaitingStatus(),
+          ],
+        );
+      case "BLOCKED":
+        return Row(
+          children: const [
+            _BlockedStatus(),
           ],
         );
       default:
         return Row(
-          children: [
-            _FinishedStatus(endedOrClickText: '3 отклика'),
+          children: const [
+            _FinishedStatus(endedOrClickText: 'Неизвестный статус'),
           ],
         );
     }
-    return Container();
   }
 }
 
@@ -243,7 +297,7 @@ class _PriceStatus extends StatelessWidget {
         borderRadius: BorderRadius.circular(50),
       ),
       child: Text(
-        price,
+        '$price UZS',
         style: const TextStyle(
           color: Colors.white,
           fontSize: 14,
@@ -266,9 +320,9 @@ class _OnTheWayStatus extends StatelessWidget {
             width: 1,
             color: AppColors.green500,
           )),
-      child: const Text(
-        'В пути',
-        style: TextStyle(
+      child: Text(
+        LocaleKeys.on_way.tr(),
+        style: const TextStyle(
           color: AppColors.green500,
           fontSize: 14,
         ),
@@ -288,9 +342,9 @@ class _WaitingStatus extends StatelessWidget {
         color: AppColors.amber500,
         borderRadius: BorderRadius.circular(50),
       ),
-      child: const Text(
-        'В ожидании',
-        style: TextStyle(
+      child: Text(
+        LocaleKeys.waiting.tr(),
+        style: const TextStyle(
           color: Colors.white,
           fontSize: 14,
         ),
@@ -300,7 +354,9 @@ class _WaitingStatus extends StatelessWidget {
 }
 
 class _CanceledStatus extends StatelessWidget {
-  const _CanceledStatus();
+  final String text;
+
+  const _CanceledStatus(this.text);
 
   @override
   Widget build(BuildContext context) {
@@ -310,9 +366,31 @@ class _CanceledStatus extends StatelessWidget {
         color: AppColors.red500,
         borderRadius: BorderRadius.circular(50),
       ),
-      child: const Text(
-        'Отменен',
-        style: TextStyle(
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+        ),
+      ),
+    );
+  }
+}
+
+class _BlockedStatus extends StatelessWidget {
+  const _BlockedStatus();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(50),
+      ),
+      child: Text(
+        LocaleKeys.blocked.tr(),
+        style: const TextStyle(
           color: Colors.white,
           fontSize: 14,
         ),

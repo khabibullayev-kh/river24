@@ -1,13 +1,19 @@
 import 'dart:async';
 
 import 'package:alt_sms_autofill/alt_sms_autofill.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:outsource/data/bloc/choose_lang_bloc.dart';
 import 'package:outsource/navigation/route_name.dart';
 import 'package:outsource/presentation/register/bloc/register_bloc.dart';
+import 'package:outsource/presentation/widgets/agreement_policy.dart';
+import 'package:outsource/presentation/widgets/choose_lang_widget.dart';
+import 'package:outsource/presentation/widgets/river_logo.dart';
 import 'package:outsource/resources/app_colors.dart';
 import 'package:outsource/resources/app_icons.dart';
+import 'package:outsource/translations/locale_keys.g.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:provider/provider.dart';
 
@@ -53,7 +59,7 @@ class _ConfirmNumberPageState extends State<ConfirmNumberPage> {
                   ),
                 ),
                 const _LoginPageBody(),
-                _LoadingWidget(),
+                const _LoadingWidget(),
               ],
             ),
           ),
@@ -68,16 +74,18 @@ class _LoadingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = context.select((RegisterBloc bloc) => bloc.data.isLoading);
-    return isLoading ? Container(
-      width: MediaQuery.of(context).size.width,
-      height: MediaQuery.of(context).size.height,
-      color: Colors.white.withOpacity(0.5),
-      child: Center(child: CircularProgressIndicator()),
-    ) : const SizedBox();
+    final isLoading =
+        context.select((RegisterBloc bloc) => bloc.data.isLoading);
+    return isLoading
+        ? Container(
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+            color: Colors.white.withOpacity(0.5),
+            child: const Center(child: CircularProgressIndicator()),
+          )
+        : const SizedBox();
   }
 }
-
 
 class _LoginPageBody extends StatelessWidget {
   const _LoginPageBody({Key? key}) : super(key: key);
@@ -91,7 +99,9 @@ class _LoginPageBody extends StatelessWidget {
             SizedBox(height: constraints.maxHeight > 900 ? 92 : 70),
             const _ChooseLanguageButton(),
             SizedBox(height: constraints.maxHeight > 900 ? 24 : 20),
-            const _RiverLogo(),
+            RiverLogo(
+              welcomeText: LocaleKeys.welcome.tr(),
+            ),
             SizedBox(height: constraints.maxHeight > 900 ? 102 : 64),
             const _ConfirmText(),
             SizedBox(height: constraints.maxHeight > 900 ? 16 : 14),
@@ -105,7 +115,7 @@ class _LoginPageBody extends StatelessWidget {
             SizedBox(height: constraints.maxHeight > 800 ? 150 : 40),
             const Divider(thickness: 1, height: 1),
             const SizedBox(height: 24),
-            const _AgreementPolicy(),
+            const AgreementPolicy(),
           ],
         );
       },
@@ -118,15 +128,31 @@ class _ChooseLanguageButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.only(right: 16.0),
-      child: Align(
-        alignment: Alignment.topRight,
-        child: Text(
-          'Язык: Русский',
-          style: TextStyle(
-            fontSize: 14,
-            color: AppColors.slate500,
+    final bloc = context.watch<RegisterBloc>();
+    return GestureDetector(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return ChangeNotifierProvider(
+              create: (_) => ChooseLangBloc(),
+              child: const ChooseLangWidget(),
+            );
+          },
+        ).whenComplete(() async {
+          await bloc.loadLang();
+        });
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(right: 16.0),
+        child: Align(
+          alignment: Alignment.topRight,
+          child: Text(
+            '${LocaleKeys.lang_text.tr()} ${bloc.data.langText}',
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.slate500,
+            ),
           ),
         ),
       ),
@@ -163,11 +189,11 @@ class _ConfirmText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Align(
+    return Align(
       alignment: Alignment.center,
       child: Text(
-        'Подтвердите номер телефона',
-        style: TextStyle(
+        LocaleKeys.confirm_phone_number.tr(),
+        style: const TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.w700,
           color: Color(0xFF2D283F),
@@ -207,12 +233,10 @@ class _EnterPinRowState extends State<_EnterPinRow> {
       _comingSms = comingSms ?? '';
       RegExp smsCode = RegExp(r"\d{5}");
       RegExpMatch? match = smsCode.firstMatch(_comingSms);
-      print('${match![0]}');
-      textEditingController.text = match[0] ?? ''; //used to set the code in the message to a string and setting it to a textcontroller. message length is 38. so my code is in string index 32-37.
+      textEditingController.text = match?[0] ??
+          ''; //used to set the code in the message to a string and setting it to a textcontroller. message length is 38. so my code is in string index 32-37.
     });
   }
-
-  Future<void> fillCode() async {}
 
   @override
   void dispose() {
@@ -237,21 +261,25 @@ class _EnterPinRowState extends State<_EnterPinRow> {
             length: 5,
             controller: textEditingController,
             enableActiveFill: true,
-            onChanged: (value) async {
-              if (textEditingController.text.length == 5) {
-                bloc.data.code = value;
-                await bloc.confirmCode();
-                if (bloc.data.message.isEmpty) {
-                  Navigator.of(context).pushReplacementNamed(
-                    RouteName.lastStep.route,
-                    arguments: bloc,
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    backgroundColor: AppColors.red500,
-                    content: Text(bloc.data.message),
-                  ));
-                }
+            onCompleted: (value) async {
+              bloc.data.code = value;
+              await bloc.confirmCode();
+              if (bloc.data.isLogin) {
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  RouteName.enterPin.route,
+                  (Route<dynamic> route) => false,
+                );
+              } else if (bloc.data.isSuccess) {
+                Navigator.of(context).pushReplacementNamed(
+                  RouteName.lastStep.route,
+                  arguments: bloc,
+                );
+              }
+              if (bloc.data.message.isNotEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  backgroundColor: AppColors.red500,
+                  content: Text(bloc.data.message),
+                ));
               }
             },
             textStyle: const TextStyle(
@@ -281,6 +309,7 @@ class _EnterPinRowState extends State<_EnterPinRow> {
               borderRadius: BorderRadius.circular(12),
               borderWidth: 1,
             ),
+            onChanged: (String value) {},
           ),
         );
       },
@@ -297,16 +326,17 @@ class _ConfirmInfoText extends StatelessWidget {
     final data = bloc.data;
     return RichText(
       text: TextSpan(
-        text: "Мы отправили СМС-код с подтверждением\n",
+        text: "${LocaleKeys.sent_to_phone.tr()}\n",
         children: [
           TextSpan(
-            text: "на номер ${data.phoneNumber}.\n",
+            text:
+                "${LocaleKeys.ru_to_number.tr() != ' ' ? "${LocaleKeys.ru_to_number.tr()} " : ''}+${data.phoneNumber}${LocaleKeys.uz_to_number.tr()}.\n",
             style: const TextStyle(
               color: AppColors.slate900,
             ),
           ),
           TextSpan(
-              text: "Изменить номер телефона",
+              text: LocaleKeys.change_number.tr(),
               style: const TextStyle(
                 color: AppColors.green500,
                 decoration: TextDecoration.underline,
@@ -371,35 +401,54 @@ class _TryAgainTextState extends State<_TryAgainText> {
     final bloc = context.read<RegisterBloc>();
     return RichText(
       text: TextSpan(
-        text: "Не получили СМС-код?\n",
+        text: "${LocaleKeys.dont_get_sms.tr()}\n",
         children: _start != 0
             ? [
-                TextSpan(
-                  text: "Повторите попытку",
-                  style: const TextStyle(
-                    color: AppColors.green500,
-                    decoration: TextDecoration.underline,
-                    fontWeight: FontWeight.w700,
+                if (LocaleKeys.repeat_after_ru.tr() != ' ')
+                  TextSpan(
+                    text: LocaleKeys.repeat_after_ru.tr(),
+                    style: const TextStyle(
+                      color: AppColors.green500,
+                      decoration: TextDecoration.underline,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () async {
+                        // bloc.resendSms();
+                        // setState(() {
+                        //   _start = 60;
+                        //
+                        // });
+                      },
                   ),
-                  recognizer: TapGestureRecognizer()
-                    ..onTap = () async {
-                      // bloc.resendSms();
-                      // setState(() {
-                      //   _start = 60;
-                      //
-                      // });
-                    },
-                ),
                 TextSpan(
-                  text: " через $_startс",
+                  text:
+                      "${LocaleKeys.repeat_after_ru.tr() != ' ' ? " ${LocaleKeys.repeat_after_ru.tr()}" : ''} $_start${LocaleKeys.repeat_uz.tr()}\n",
                   style: const TextStyle(
                     color: AppColors.slate900,
                   ),
                 ),
+                if (LocaleKeys.repeat_uz2.tr() != ' ')
+                  TextSpan(
+                    text: LocaleKeys.repeat_uz2.tr(),
+                    style: const TextStyle(
+                      color: AppColors.green500,
+                      decoration: TextDecoration.underline,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () async {
+                        // bloc.resendSms();
+                        // setState(() {
+                        //   _start = 60;
+                        //
+                        // });
+                      },
+                  ),
               ]
             : [
                 TextSpan(
-                  text: "Повторить попытку",
+                  text: LocaleKeys.repeat.tr(),
                   style: const TextStyle(
                     color: AppColors.green500,
                     decoration: TextDecoration.underline,
@@ -438,12 +487,18 @@ class _SignInButton extends StatelessWidget {
         child: ElevatedButton(
           onPressed: () async {
             await bloc.confirmCode();
-            if (bloc.data.message.isEmpty) {
+            if (bloc.data.isLogin) {
+              Navigator.of(context).pushNamedAndRemoveUntil(
+                RouteName.enterPin.route,
+                (Route<dynamic> route) => false,
+              );
+            } else if (bloc.data.isSuccess) {
               Navigator.of(context).pushReplacementNamed(
                 RouteName.lastStep.route,
                 arguments: bloc,
               );
-            } else {
+            }
+            if (bloc.data.message.isNotEmpty) {
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                 backgroundColor: AppColors.red500,
                 content: Text(bloc.data.message),
@@ -467,7 +522,7 @@ class _SignInButton extends StatelessWidget {
                 Image.asset(AppIcons.done),
                 const SizedBox(width: 10),
                 Text(
-                  'Подтвердить',
+                  LocaleKeys.confirm.tr(),
                   style: TextStyle(
                     fontSize: isHeight ? 14 : 14,
                     fontWeight: FontWeight.w700,
@@ -479,58 +534,6 @@ class _SignInButton extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _AgreementPolicy extends StatelessWidget {
-  const _AgreementPolicy({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return RichText(
-      text: TextSpan(
-        text: "Продолжая, вы подтверждаете, что ознакомлены\n",
-        children: [
-          const TextSpan(
-            text: "c ",
-            style: TextStyle(
-              color: AppColors.slate900,
-            ),
-          ),
-          TextSpan(
-              text: "Политикой конфиденциальности",
-              style: const TextStyle(
-                color: AppColors.green500,
-              ),
-              recognizer: TapGestureRecognizer()
-                ..onTap = () => print("SIGNIN")),
-          const TextSpan(
-            text: " и\n",
-            style: TextStyle(
-              color: AppColors.slate900,
-            ),
-          ),
-          TextSpan(
-              text: "Пользовательским соглашением",
-              style: const TextStyle(
-                color: AppColors.green500,
-              ),
-              recognizer: TapGestureRecognizer()
-                ..onTap = () => print("SIGNIN")),
-          const TextSpan(
-            text: " и принимаете их",
-            style: TextStyle(
-              color: AppColors.slate900,
-            ),
-          ),
-        ],
-        style: const TextStyle(
-          color: AppColors.slate900,
-          fontSize: 14,
-        ),
-      ),
-      textAlign: TextAlign.center,
     );
   }
 }

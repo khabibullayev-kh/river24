@@ -10,7 +10,7 @@ class PinRepository  {
 
   PinRepository._internal(this.spData);
 
-  Future<String> getPin() => spData.getPin();
+  Future<String?> getPin() => spData.getPin();
 
-  Future<bool> savePin(String item) => spData.setPin(item);
+  Future<bool> savePin(String? item) => spData.setPin(item);
 }

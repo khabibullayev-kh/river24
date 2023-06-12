@@ -1,29 +1,51 @@
-import 'dart:io';
-
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:outsource/presentation/adverts/models/advert.dart';
 
 class AdvertApiClient {
-  static final baseUrl = dotenv.env['MAIN_URL'];
+  final Dio _dio;
 
-  Dio dio = Dio();
-
-  AdvertApiClient() {
-    dio.options.baseUrl = '$baseUrl';
-    dio.options.connectTimeout = const Duration(milliseconds: 5000); //5s
-    dio.options.receiveTimeout = const Duration(milliseconds: 3000);
-    dio.options.headers[HttpHeaders.authorizationHeader] =
-        'Bearer 9|CMwJQU4SmTyKFtt9qRrRbRssL7QTSaOXru5BuTMd';
-  }
+  AdvertApiClient(this._dio);
 
   Future<List<Advert>> getAllAdverts() async {
     try {
-      final response = await dio.get('api/member/adverts/all');
+      final response = await _dio.get('api/member/adverts/all');
+      return List<Advert>.from(
+        response.data["result"]["items"].map(
+          (x) => Advert.fromJson(x),
+        ),
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<Advert>> getCompleted() async {
+    try {
+      final response = await _dio.get('api/member/adverts/all/completed');
       return List<Advert>.from(
         response.data["result"].map(
           (x) => Advert.fromJson(x),
         ),
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> rateAdvert({
+    required int driverId,
+    required int advertId,
+    required int value,
+  }) async {
+    try {
+      await _dio.post(
+        'api/member/rates/rate',
+        queryParameters: {
+          "rated_id" : driverId.toString(),
+          "advert_id" : advertId.toString(),
+          "value" : value.toString(),
+        },
       );
     } catch (e) {
       rethrow;

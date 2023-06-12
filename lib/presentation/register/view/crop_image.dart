@@ -1,10 +1,12 @@
 import 'package:cropperx/cropperx.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:outsource/navigation/route_name.dart';
 import 'package:outsource/presentation/register/bloc/register_bloc.dart';
 import 'package:outsource/resources/app_colors.dart';
+import 'package:outsource/translations/locale_keys.g.dart';
 import 'package:provider/provider.dart';
 
 class CropImagePage extends StatefulWidget {
@@ -51,7 +53,7 @@ class _CropImagePageState extends State<CropImagePage> {
       value: widget.bloc,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Выбор аватара'),
+          title: Text(LocaleKeys.choose_avatar.tr()),
           backgroundColor: AppColors.backgroundColor,
         ),
         body: SafeArea(
@@ -89,7 +91,7 @@ class _CropImagePageState extends State<CropImagePage> {
                     }
                     Navigator.pop(context, true);
                   },
-                  child: const Text('Выбрать'),
+                  child: Text(LocaleKeys.choose.tr()),
                 ),
               ],
             ),
