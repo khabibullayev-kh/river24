@@ -232,31 +232,31 @@ class _SignInButtonRow extends StatelessWidget {
           children: <Widget>[
             ElevatedButton(
               onPressed: () async {
-                await bloc.sendSms();
-                if (bloc.data.isLogin) {
-                  Navigator.of(context).pushNamed(
-                    RouteName.loginPin.route,
-                    arguments: bloc,
-                  );
-                } else if (bloc.data.phoneController.text.length > 5) {
-                  Navigator.of(context).pushNamed(
-                    RouteName.confirmNumberPage.route,
-                    arguments: bloc,
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      backgroundColor: AppColors.red500,
-                      content: Text(
-                        LocaleKeys.enter_phone_number.tr(),
-                        style: const TextStyle(
-                          color: Colors.white,
+                await bloc.sendSms().whenComplete(() {
+                  if (bloc.data.isLogged == true) {
+                    Navigator.of(context).pushNamed(
+                      RouteName.loginPin.route,
+                      arguments: bloc,
+                    );
+                  } else if (bloc.data.phoneController.text.length != 17) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        backgroundColor: AppColors.red500,
+                        content: Text(
+                          'Номер телефона не действительный',
+                          style: TextStyle(
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                }
-
+                    );
+                  } else if(bloc.data.isLogged == false){
+                    Navigator.of(context).pushNamed(
+                      RouteName.confirmNumberPage.route,
+                      arguments: bloc,
+                    );
+                  }
+                });
                 if (bloc.data.message.isNotEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(

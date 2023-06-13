@@ -28,6 +28,7 @@ class RegisterBlocData {
 
   bool isLogin = false;
   bool isSuccess = false;
+  bool? isLogged;
   bool isLoading = false;
   bool isPinTrue = false;
 
@@ -56,11 +57,9 @@ class RegisterBloc extends ChangeNotifier {
     );
     _confirmationPhone =
         data.phoneController.text.replaceAll('+', '').replaceAll(' ', '');
-
     final response = await _authApiClient.registerViaPhone(_confirmationPhone);
     if (response.success) {
-      data.isLogin = response.result!.isLogin ?? false;
-      //data.message = response.result!.message!;
+      data.isLogged = response.result!.isLogin!;
       data.isSuccess = response.success;
     } else {
       data.message = response.error!.message;

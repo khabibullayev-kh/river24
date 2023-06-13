@@ -1,13 +1,11 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:outsource/navigation/route_name.dart';
 import 'package:outsource/presentation/adverts/bloc/adverts_bloc.dart';
 import 'package:outsource/presentation/widgets/advert_widget.dart';
 import 'package:outsource/presentation/widgets/cupertino_segment_child.dart';
 import 'package:outsource/resources/app_colors.dart';
-import 'package:outsource/resources/app_icons.dart';
 import 'package:outsource/translations/locale_keys.g.dart';
 import 'package:provider/provider.dart';
 

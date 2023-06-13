@@ -96,23 +96,23 @@ class _LoginPageBody extends StatelessWidget {
       builder: (context, constraints) {
         return Column(
           children: <Widget>[
-            SizedBox(height: constraints.maxHeight > 900 ? 92 : 70),
+            const Expanded(flex:2 ,child: SizedBox()),
             const _ChooseLanguageButton(),
-            SizedBox(height: constraints.maxHeight > 900 ? 24 : 20),
-            RiverLogo(
-              welcomeText: LocaleKeys.welcome.tr(),
-            ),
-            SizedBox(height: constraints.maxHeight > 900 ? 102 : 64),
+            const Expanded(child: SizedBox()),
+            RiverLogo(welcomeText: LocaleKeys.welcome.tr()),
+            const Expanded(flex: 2,child: SizedBox()),
+
             const _ConfirmText(),
             SizedBox(height: constraints.maxHeight > 900 ? 16 : 14),
             const _ConfirmInfoText(),
+            SizedBox(height: constraints.maxHeight > 900 ? 24 : 20),
             SizedBox(height: constraints.maxHeight > 900 ? 24 : 20),
             const _EnterPinRow(),
             SizedBox(height: constraints.maxHeight > 900 ? 24 : 20),
             const _TryAgainText(),
             SizedBox(height: constraints.maxHeight > 900 ? 24 : 20),
             const _SignInButton(),
-            SizedBox(height: constraints.maxHeight > 800 ? 150 : 40),
+            const Expanded(flex:2 ,child: SizedBox()),
             const Divider(thickness: 1, height: 1),
             const SizedBox(height: 24),
             const AgreementPolicy(),
