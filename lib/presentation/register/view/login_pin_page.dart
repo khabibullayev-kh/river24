@@ -21,8 +21,8 @@ class _LoginPinPageState extends State<LoginPinPage> {
   @override
   Widget build(BuildContext context) {
     final maxHeight = MediaQuery.of(context).size.height;
-    return ChangeNotifierProvider(
-      create: (_) => widget.bloc,
+    return ChangeNotifierProvider.value(
+      value: widget.bloc,
       child: Scaffold(
         body: Column(
           children: <Widget>[
@@ -129,6 +129,7 @@ class _EnterPinRowState extends State<_EnterPinRow> {
                 child: PinCodeTextField(
                   length: pinLength,
                   controller: pinController,
+                  autoDisposeControllers: false,
                   onCompleted: (value) async {
                     await bloc.enterPin(pinController.text);
 

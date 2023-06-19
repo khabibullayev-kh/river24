@@ -1,6 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:outsource/data/repository/lang_repository.dart';
 import 'package:outsource/navigation/route_name.dart';
 
@@ -28,11 +27,11 @@ class ChooseLangBloc extends ChangeNotifier {
   Future<void> confirmLang(BuildContext context) async {
     await LangRepository.getInstance().saveLang(data.currentLang);
     if (data.currentLang == 'uz') {
-      await context.setLocale(Locale('uz', 'Latn'));
+      await context.setLocale(const Locale('uz', 'Latn'));
     } else if (data.currentLang == 'oz') {
-      await context.setLocale(Locale('uz', 'Cyrl'));
+      await context.setLocale(const Locale('uz', 'Cyrl'));
     } else if (data.currentLang == 'ru') {
-      await context.setLocale(Locale('ru'));
+      await context.setLocale(const Locale('ru'));
     }
     Navigator.of(context).pushNamedAndRemoveUntil(
       RouteName.splash.route,
@@ -43,7 +42,7 @@ class ChooseLangBloc extends ChangeNotifier {
 
 enum Languages {
   ru(name: 'Русский', slug: 'ru'),
-  uz(name: 'Узбекча', slug: 'oz'),
+  uz(name: 'Ўзбекча', slug: 'oz'),
   oz(name: 'O’zbekcha', slug: 'uz');
 
   final String name;

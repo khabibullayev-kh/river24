@@ -80,20 +80,15 @@ class RegisterBloc extends ChangeNotifier {
       data.code,
     );
 
-    print('FUCK3 ${await response.error}');
-
     if (response.result?.token == null) {
       data.message = response.error?.message ?? 'Произошла ошибка';
       data.isSuccess = false;
       data.isLogin = false;
     } else {
-      print('FUCK ${response.result}');
       if (response.result?.isLogin == true) {
         data.isLogin = true;
-        print('FUCK1 ${response.result}');
       } else {
         data.isSuccess = response.success;
-        print('FUCK2 ${response.result}');
       }
       TokenRepository.getInstance().saveToken(response.result!.token);
     }

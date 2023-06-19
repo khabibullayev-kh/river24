@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_multi_formatter/formatters/phone_input_formatter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:outsource/data/http/dio_provider.dart';
 import 'package:outsource/data/http/new_advert_client.dart';
@@ -49,7 +50,6 @@ class NewOrderBloc extends ChangeNotifier {
     load();
   }
 
-
   Future<void> load() async {
     data.weights = await _newAdvertApiClient.getWeights();
     final regions = await _newAdvertApiClient.getRegions();
@@ -59,13 +59,21 @@ class NewOrderBloc extends ChangeNotifier {
       data.fromRegionItems.add(
         DropdownMenuItem(
           value: i.id,
-          child: Text(lang == 'ru' ? i.title.ru : lang == 'oz' ? i.title.oz : i.title.uz),
+          child: Text(lang == 'ru'
+              ? i.title.ru
+              : lang == 'oz'
+                  ? i.title.oz
+                  : i.title.uz),
         ),
       );
       data.toRegionItems.add(
         DropdownMenuItem(
           value: i.id,
-          child: Text(lang == 'ru' ? i.title.ru : lang == 'oz' ? i.title.oz : i.title.uz),
+          child: Text(lang == 'ru'
+              ? i.title.ru
+              : lang == 'oz'
+                  ? i.title.oz
+                  : i.title.uz),
         ),
       );
     }
@@ -79,7 +87,11 @@ class NewOrderBloc extends ChangeNotifier {
       data.fromDistrictItems = value.map((district) {
         return DropdownMenuItem(
           value: district.id,
-          child: Text(lang == 'ru' ? district.title.ru : lang == 'oz' ? district.title.oz : district.title.uz),
+          child: Text(lang == 'ru'
+              ? district.title.ru
+              : lang == 'oz'
+                  ? district.title.oz
+                  : district.title.uz),
         );
       }).toList();
       data.fromDistrictId = value.first.id;
@@ -94,7 +106,11 @@ class NewOrderBloc extends ChangeNotifier {
       data.toDistrictItems = value.map((district) {
         return DropdownMenuItem(
           value: district.id,
-          child: Text(lang == 'ru' ? district.title.ru : lang == 'oz' ? district.title.oz : district.title.uz),
+          child: Text(lang == 'ru'
+              ? district.title.ru
+              : lang == 'oz'
+                  ? district.title.oz
+                  : district.title.uz),
         );
       }).toList();
       data.toDistrictId = value.first.id;
@@ -125,20 +141,23 @@ class NewOrderBloc extends ChangeNotifier {
   Future<void> createAdvert() async {
     data.isLoading = true;
     notifyListeners();
-    if (data.title.text.isNotEmpty ||
-        data.receiverFullName.text.isNotEmpty ||
-        data.receiverAddress.text.isNotEmpty ||
-        data.receiverPhoneNumber.text.isNotEmpty ||
-        data.comment.text.isNotEmpty ||
-        data.mapAddress.text.isNotEmpty ||
-        data.fromRegionId != null ||
-        data.fromDistrictId != null ||
-        data.toRegionId != null ||
-        data.toDistrictId != null ||
-        data.lat != null ||
+    if (data.title.text.isNotEmpty &&
+        data.receiverFullName.text.isNotEmpty &&
+        data.receiverAddress.text.isNotEmpty &&
+        (data.receiverPhoneNumber.text.isNotEmpty &&
+        isPhoneValid(data.receiverPhoneNumber.text)) &&
+        data.mapAddress.text.isNotEmpty &&
+        data.fromRegionId != null &&
+        data.fromDistrictId != null &&
+        data.toRegionId != null &&
+        data.toDistrictId != null &&
+        data.lat != null &&
         data.lon != null) {
-      final confirmationPhone = data.receiverPhoneNumber.text.replaceAll(' ', '').replaceAll('+', '');
-      await _newAdvertApiClient.addAdvert(title: data.title.text,
+      final confirmationPhone =
+          data.receiverPhoneNumber.text.replaceAll(' ', '').replaceAll('+', '');
+      await _newAdvertApiClient
+          .addAdvert(
+        title: data.title.text,
         fromLat: data.lat.toString(),
         fromLong: data.lon.toString(),
         fromRegionId: data.fromRegionId!,
@@ -151,7 +170,8 @@ class NewOrderBloc extends ChangeNotifier {
         comment: data.comment.text,
         image: data.images,
         weightId: data.weightId,
-      ).whenComplete(() {
+      )
+          .whenComplete(() {
         data.title.clear();
         data.receiverFullName.clear();
         data.receiverAddress.clear();

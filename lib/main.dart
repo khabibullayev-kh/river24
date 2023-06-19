@@ -23,7 +23,6 @@ void main() async {
         Locale('uz', 'Latn'), // Uzbek Latin
         Locale('ru'), // Russian
       ],
-      fallbackLocale: const Locale('ru'),
       assetLoader: const CodegenLoader(),
       child: const MyApp(),
     ),
